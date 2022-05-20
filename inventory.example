@@ -1,0 +1,4 @@
+alpine_server ansible_host=10.0.1.101
+
+[database_server]
+alpine_server

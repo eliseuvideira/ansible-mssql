@@ -1,0 +1,123 @@
+---
+- name: Ensure Root Directory Exists
+  file:
+    path: "{{ mssql_root_directory }}"
+    state: directory
+
+- name: Ensure Database Directory Exists
+  file:
+    path: "{{ mssql_root_directory }}/{{ mssql_name }}"
+    state: directory
+
+- name: Clone and Update Git Repo
+  git:
+    repo: https://github.com/eliseuvideira/mssql.git
+    dest: "{{ mssql_root_directory }}/{{ mssql_name }}"
+
+- name: Configure Permissions For Directories
+  become: true
+  become_user: root
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "10001"
+    group: "root"
+  with_items:
+    - "{{ mssql_root_directory }}/{{ mssql_name }}/backups"
+    - "{{ mssql_root_directory }}/{{ mssql_name }}/database"
+
+- name: Ensure .env File Exists
+  copy:
+    content: |
+      # string(Developer | Express | Standard | Enterprise | EnterpriseCore), example: Express
+      MSSQL_PID={{ mssql_pid }}
+
+      # string, example: 10.0.1.101
+      DB_SERVER={{ mssql_server }}
+
+      # string(numeric), example: 1433
+      DB_PORT={{ mssql_port }}
+
+      # string, example: sa
+      DB_USER={{ mssql_user }}
+
+      # string, example: 0JTnyEFHHdV5j90LnaqtPmpKNvwL5taMJrezZoVjtNgD
+      DB_PASSWORD={{ mssql_password }}
+
+      # string, example: mssql-database
+      DB_DATABASE={{ mssql_database }}
+
+      # string, example: AKIAIOSFODNN7EXAMPLE
+      AWS_ACCESS_KEY_ID={{ aws_access_key_id }}
+
+      # string, example: wJalrXUtnFEMILK7MDENGEbPxRfiCYEXAMPLEKEY
+      AWS_SECRET_ACCESS_KEY={{ aws_secret_access_key }}
+
+      # string(s3://<bucket_name>), example: s3://mssql-backups
+      AWS_S3_BUCKET={{ aws_s3_bucket }}
+
+      # string(us-east-2 | sa-east-1 | ...), example: us-east-2
+      AWS_REGION={{ aws_region }}
+    dest: "{{ mssql_root_directory }}/{{ mssql_name }}/.env"
+
+- name: Ensure Docker Compose Running
+  shell: |
+    #!/bin/sh
+    cd "{{ mssql_root_directory }}/{{ mssql_name }}"
+    /usr/bin/docker-compose ps mssql --status=running --quiet 2>/dev/null || true
+  register: docker_compose_ps
+  changed_when: docker_compose_ps.stdout == ""
+
+- name: Start Docker Compose
+  shell: |
+    #!/bin/sh
+    cd "{{ mssql_root_directory }}/{{ mssql_name }}"
+    /usr/bin/docker-compose up --detach --wait
+  when: docker_compose_ps.stdout == ""
+
+- name: Wait For Database to Up
+  pause:
+    seconds: 10
+  when: docker_compose_ps.stdout == ""
+
+- name: Ensure Database Exists
+  shell: |
+    #!/bin/sh
+    /usr/bin/docker run \
+      --rm \
+      -i \
+      mcr.microsoft.com/mssql-tools \
+      /opt/mssql-tools/bin/sqlcmd \
+      -S "{{ mssql_server }},{{ mssql_port }}" \
+      -U "{{ mssql_user }}" \
+      -P "{{ mssql_password }}" \
+      -h -1 \
+      -s "," \
+      -W \
+      -Q "set nocount on; select name from sys.databases where name = '{{ mssql_database }}';"
+  register: ensure_database_exists
+  changed_when: ensure_database_exists.stdout != mssql_database
+
+- name: Create Database
+  shell: |
+    #!/bin/sh
+    /usr/bin/docker run \
+      --rm \
+      -i \
+      mcr.microsoft.com/mssql-tools \
+      /opt/mssql-tools/bin/sqlcmd \
+      -S "{{ mssql_server }},{{ mssql_port }}" \
+      -U "{{ mssql_user }}" \
+      -P "{{ mssql_password }}" \
+      -h -1 \
+      -s "," \
+      -W \
+      -Q "create database [{{ mssql_database }}];"
+  when: ensure_database_exists.stdout != mssql_database
+
+- name: Notify Handlers
+  meta: flush_handlers
+
+- name: Do Nothing
+  debug:
+    msg: "{{ mssql_database }}"

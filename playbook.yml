@@ -1,0 +1,20 @@
+---
+- name: Deploy MSSQL Database
+  hosts: database_server
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Create Databases
+      include_role:
+        name: mssql
+      vars:
+        mssql_root_directory: "/home/eliseu/tmp/mssql"
+        mssql_name: "{{ item.mssql_name }}"
+        mssql_pid: "{{ item.mssql_pid }}"
+        mssql_server: "{{ item.mssql_server }}"
+        mssql_port: "{{ item.mssql_port }}"
+        mssql_user: "{{ item.mssql_user }}"
+        mssql_password: "{{ item.mssql_password }}"
+        mssql_database: "{{ item.mssql_database }}"
+        aws_s3_bucket: "{{ item.mssql_bucket }}"
+      loop: "{{ databases }}"
