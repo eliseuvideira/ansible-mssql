@@ -1,0 +1,104 @@
+---
+- name: Create Root Directory
+  file:
+    path: "{{ database_root_directory }}"
+    state: directory
+
+- name: Create Database Directory
+  file:
+    path: "{{ database_root_directory }}/{{ database_name }}"
+    state: directory
+
+- name: Clone and Update Git Repo
+  git:
+    repo: https://github.com/eliseuvideira/mssql.git
+    dest: "{{ database_root_directory }}/{{ database_name }}"
+
+- name: Configure Permissions For Directories
+  become: true
+  become_user: root
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "10001"
+    group: "root"
+  with_items:
+    - "{{ database_root_directory }}/{{ database_name }}/backups"
+    - "{{ database_root_directory }}/{{ database_name }}/database"
+
+- name: Create `.env` File
+  template:
+    src: environment.j2
+    dest: "{{ database_root_directory }}/{{ database_name }}/.env"
+
+- name: Check Database Running
+  shell: |
+    #!/bin/sh
+    cd "{{ database_root_directory }}/{{ database_name }}"
+    /usr/bin/docker-compose ps mssql --status=running --quiet 2>/dev/null || true
+  register: check_database_running
+  changed_when: check_database_running.stdout == ""
+
+- set_fact: database_running={{ check_database_running.stdout != "" }}
+
+- name: Start Database
+  shell: |
+    #!/bin/sh
+    cd "{{ database_root_directory }}/{{ database_name }}"
+    /usr/bin/docker-compose up --detach --wait
+  when: database_running == false
+
+- name: Wait Starting Database
+  pause:
+    seconds: 10
+  when: database_running == false
+
+- name: Check Database Exists
+  shell: |
+    #!/bin/sh
+    /usr/bin/docker run \
+      --rm \
+      -i \
+      mcr.microsoft.com/mssql-tools \
+      /opt/mssql-tools/bin/sqlcmd \
+      -S "{{ database_server }},{{ database_port }}" \
+      -U "{{ database_user }}" \
+      -P "{{ database_password }}" \
+      -h -1 \
+      -s "," \
+      -W \
+      -Q "set nocount on; select name from sys.databases where name = '{{ database_database }}';"
+  register: ensure_database_exists
+  changed_when: ensure_database_exists.stdout != database_database
+
+- set_fact: database_exists={{ ensure_database_exists.stdout == database_database }}
+
+- name: Create Database
+  shell: |
+    #!/bin/sh
+    /usr/bin/docker run \
+      --rm \
+      -i \
+      mcr.microsoft.com/mssql-tools \
+      /opt/mssql-tools/bin/sqlcmd \
+      -S "{{ database_server }},{{ database_port }}" \
+      -U "{{ database_user }}" \
+      -P "{{ database_password }}" \
+      -h -1 \
+      -s "," \
+      -W \
+      -Q "create database [{{ database_database }}];"
+  when: database_exists == false
+
+- name: Configure Crontab Backups
+  become: true
+  become_user: root
+  cron:
+    name: "MSSQL Database Backup for {{ database_name }}"
+    minute: "20"
+    hour: "*/4"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    user: root
+    job: "{{ database_root_directory }}/{{ database_name }}/scripts/create-backup"

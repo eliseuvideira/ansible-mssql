@@ -1,0 +1,36 @@
+all:
+  hosts:
+    company-1:
+      ansible_host: 10.0.1.102
+    company-2:
+      ansible_host: 10.0.1.102
+
+production:
+  hosts:
+    company-1:
+      name: company-1
+      database_pid: Express
+      database_server: 10.0.1.102
+      database_port: 55001
+      database_user: sa
+      database_password: 0JTnyEFHHdV5j90LnaqtPmpKNvwL5taMJrezZoVjtNgD1
+      database_database: COMPANY_1
+      bucket_name: mssql-backups-company-1
+      bucket_expiration_days: 20
+
+    company-2:
+      name: company-2
+      database_pid: Express
+      database_server: 10.0.1.102
+      database_port: 55002
+      database_user: sa
+      database_password: 0JTnyEFHHdV5j90LnaqtPmpKNvwL5taMJrezZoVjtNgD2
+      database_database: COMPANY_2
+      bucket_name: mssql-backups-company-2
+      bucket_expiration_days: 20
+
+  vars:
+    database_root_directory: ~/mssql
+    aws_access_key_id: AKIAIOSFODNN7EXAMPLE
+    aws_secret_access_key: wJalrXUtnFEMILK7MDENGEbPxRfiCYEXAMPLEKEY
+    aws_region: us-east-2

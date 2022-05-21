@@ -1,0 +1,29 @@
+# string(Developer | Express | Standard | Enterprise | EnterpriseCore), example: Express
+MSSQL_PID={{ database_pid }}
+
+# string, example: 10.0.1.101
+DB_SERVER={{ database_server }}
+
+# string(numeric), example: 1433
+DB_PORT={{ database_port }}
+
+# string, example: sa
+DB_USER={{ database_user }}
+
+# string, example: 0JTnyEFHHdV5j90LnaqtPmpKNvwL5taMJrezZoVjtNgD
+DB_PASSWORD={{ database_password }}
+
+# string, example: mssql-database
+DB_DATABASE={{ database_database }}
+
+# string, example: AKIAIOSFODNN7EXAMPLE
+AWS_ACCESS_KEY_ID={{ database_aws_access_key_id }}
+
+# string, example: wJalrXUtnFEMILK7MDENGEbPxRfiCYEXAMPLEKEY
+AWS_SECRET_ACCESS_KEY={{ database_aws_secret_access_key }}
+
+# string(s3://<bucket_name>), example: s3://mssql-backups
+AWS_S3_BUCKET=s3://{{ database_aws_bucket_name }}
+
+# string(us-east-2 | sa-east-1 | ...), example: us-east-2
+AWS_REGION={{ database_aws_region }}
