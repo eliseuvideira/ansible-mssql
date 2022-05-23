@@ -28,7 +28,7 @@ production:
     farm-land:
       database_identifier: farm-land
       database_pid: Express
-      database_server: 10.0.1.102
+      database_server: 10.0.1.103
       database_port: 55002
       database_user: sa
       database_password: 3ksU7pBA9TWST5kR41Cri0897JvTaxHjH3Zmo6zjysgQ
