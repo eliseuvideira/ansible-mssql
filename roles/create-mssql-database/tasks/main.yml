@@ -101,3 +101,36 @@
     weekday: "*"
     user: root
     job: "{{ database_directory }}/scripts/create-backup"
+
+- name: Create `SERVICES` File
+  file:
+    path: ~/SERVICES
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+
+- name: Configure `SERVICES` Header
+  lineinfile:
+    path: ~/SERVICES
+    state: present
+    regex: "^PORT "
+    line: '{{ "%-10s" | format("PORT") }} {{ "%-10s" | format("STATUS") }} {{ "%-20s" | format("GROUP") }} {{ "%-8s" | format("DOCKER") }} {{ "%s" | format("SERVICE") }}'
+
+- name: Configure `SERVICES` Service
+  lineinfile:
+    path: ~/SERVICES
+    state: present
+    regex: "^{{ database_port }} "
+    line: '{{ "%-10s" | format(database_port) }} {{ "%-10s" | format("enabled") }} {{ "%-20s" | format(database_group) | truncate(20, True, "") }} {{ "%-8s" | format("yes") }} {{ "%s" | format(database_identifier) }}'
+
+- name: Sort `SERVICES` File
+  shell: |
+    #!/usr/bin/env bash
+    changed_rows="$(comm -23 <(head -n 1 SERVICES && tail -n +2 SERVICES | sort) <(cat SERVICES) | wc -l)"
+    if [ "$changed_rows" != "0" ]; then
+      sorted="$(head -n 1 SERVICES && tail -n +2 SERVICES | sort)"
+      printf "%s\n" "$sorted" >~/SERVICES
+    fi
+    echo "$changed_rows"
+  register: sort_services_file
+  changed_when: sort_services_file.stdout != "0"

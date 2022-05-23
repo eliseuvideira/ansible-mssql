@@ -17,6 +17,7 @@ all:
 production:
   hosts:
     wood-sea:
+      database_group: acme-inc
       database_identifier: wood-sea
       database_pid: Express
       database_server: 10.0.1.102
@@ -26,6 +27,7 @@ production:
       database_database: wood_sea_database
 
     farm-land:
+      database_group: acme-inc
       database_identifier: farm-land
       database_pid: Express
       database_server: 10.0.1.103
