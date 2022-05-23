@@ -1,36 +1,35 @@
 all:
   hosts:
-    company-1:
+    wood-sea:
       ansible_host: 10.0.1.102
-    company-2:
-      ansible_host: 10.0.1.102
+      ansible_user: alpine
+    farm-land:
+      ansible_host: 10.0.1.103
+      ansible_user: alpine
+  vars:
+    mssql_project: allcom-sistemas-databases-mssql
+    mssql_root_directory: /home/alpine/mssql-databases
+    mssql_aws_access_key_id: AKIAIOSFODNN7EXAMPLE
+    mssql_aws_secret_access_key: wJalrXUtnFEMILK7MDENGEbPxRfiCYEXAMPLEKEY
+    mssql_aws_region: us-east-2
+    mssql_backups_expiration_days: 60
 
 production:
   hosts:
-    company-1:
-      name: company-1
+    wood-sea:
+      database_identifier: wood-sea
       database_pid: Express
       database_server: 10.0.1.102
       database_port: 55001
       database_user: sa
-      database_password: 0JTnyEFHHdV5j90LnaqtPmpKNvwL5taMJrezZoVjtNgD1
-      database_database: COMPANY_1
-      bucket_name: mssql-backups-company-1
-      bucket_expiration_days: 20
+      database_password: rGRAKBzNM0ODg4Swl4OdNBBGX0RhGoDjiZQJQbFNExsW
+      database_database: wood_sea_database
 
-    company-2:
-      name: company-2
+    farm-land:
+      database_identifier: farm-land
       database_pid: Express
       database_server: 10.0.1.102
       database_port: 55002
       database_user: sa
-      database_password: 0JTnyEFHHdV5j90LnaqtPmpKNvwL5taMJrezZoVjtNgD2
-      database_database: COMPANY_2
-      bucket_name: mssql-backups-company-2
-      bucket_expiration_days: 20
-
-  vars:
-    database_root_directory: ~/mssql
-    aws_access_key_id: AKIAIOSFODNN7EXAMPLE
-    aws_secret_access_key: wJalrXUtnFEMILK7MDENGEbPxRfiCYEXAMPLEKEY
-    aws_region: us-east-2
+      database_password: 3ksU7pBA9TWST5kR41Cri0897JvTaxHjH3Zmo6zjysgQ
+      database_database: farm_land_database

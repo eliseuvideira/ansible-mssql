@@ -1,4 +1,7 @@
 ---
+- set_fact:
+    bucket_name: "{{ mssql_project }}-{{ database_identifier }}"
+
 - name: Create Bucket
   s3_bucket:
     name: "{{ bucket_name }}"
@@ -8,27 +11,16 @@
       ignore_public_acls: true
       block_public_policy: true
       restrict_public_buckets: true
-    aws_access_key: "{{ bucket_aws_access_key_id }}"
-    aws_secret_key: "{{ bucket_aws_secret_access_key }}"
-    aws_region: "{{ bucket_aws_region }}"
+    aws_access_key: "{{ mssql_aws_access_key_id }}"
+    aws_secret_key: "{{ mssql_aws_secret_access_key }}"
+    aws_region: "{{ mssql_aws_region }}"
 
 - name: Create Bucket Lifecycle Deletion Rule
   s3_lifecycle:
     name: "{{ bucket_name }}"
     status: enabled
     state: present
-    expiration_days: "{{ bucket_expiration_days }}"
-    aws_access_key: "{{ bucket_aws_access_key_id }}"
-    aws_secret_key: "{{ bucket_aws_secret_access_key }}"
-    aws_region: "{{ bucket_aws_region }}"
-  when: bucket_expiration_days is defined
-
-- name: Delete Bucket Lifecycle Deletion Rule
-  s3_lifecycle:
-    name: "{{ bucket_name }}"
-    status: disabled
-    state: absent
-    aws_access_key: "{{ bucket_aws_access_key_id }}"
-    aws_secret_key: "{{ bucket_aws_secret_access_key }}"
-    aws_region: "{{ bucket_aws_region }}"
-  when: bucket_expiration_days is not defined
+    expiration_days: "{{ mssql_backups_expiration_days }}"
+    aws_access_key: "{{ mssql_aws_access_key_id }}"
+    aws_secret_key: "{{ mssql_aws_secret_access_key }}"
+    aws_region: "{{ mssql_aws_region }}"

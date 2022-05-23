@@ -1,18 +1,16 @@
 ---
-- name: Create Root Directory
-  file:
-    path: "{{ database_root_directory }}"
-    state: directory
+- set_fact:
+    database_directory: "{{ mssql_root_directory }}/{{ database_identifier }}"
 
 - name: Create Database Directory
   file:
-    path: "{{ database_root_directory }}/{{ database_name }}"
+    path: "{{ database_directory }}"
     state: directory
 
 - name: Clone and Update Git Repo
   git:
     repo: https://github.com/eliseuvideira/mssql.git
-    dest: "{{ database_root_directory }}/{{ database_name }}"
+    dest: "{{ database_directory }}"
 
 - name: Configure Permissions For Directories
   become: true
@@ -23,28 +21,29 @@
     owner: "10001"
     group: "root"
   with_items:
-    - "{{ database_root_directory }}/{{ database_name }}/backups"
-    - "{{ database_root_directory }}/{{ database_name }}/database"
+    - "{{ database_directory }}/backups"
+    - "{{ database_directory }}/database"
 
 - name: Create `.env` File
   template:
     src: environment.j2
-    dest: "{{ database_root_directory }}/{{ database_name }}/.env"
+    dest: "{{ database_directory }}/.env"
 
 - name: Check Database Running
   shell: |
     #!/bin/sh
-    cd "{{ database_root_directory }}/{{ database_name }}"
+    cd "{{ database_directory }}"
     /usr/bin/docker-compose ps mssql --status=running --quiet 2>/dev/null || true
   register: check_database_running
   changed_when: check_database_running.stdout == ""
 
-- set_fact: database_running={{ check_database_running.stdout != "" }}
+- set_fact:
+    database_running: "{{ check_database_running.stdout != '' }}"
 
 - name: Start Database
   shell: |
     #!/bin/sh
-    cd "{{ database_root_directory }}/{{ database_name }}"
+    cd "{{ database_directory }}"
     /usr/bin/docker-compose up --detach --wait
   when: database_running == false
 
@@ -94,11 +93,11 @@
   become: true
   become_user: root
   cron:
-    name: "MSSQL Database Backup for {{ database_name }}"
+    name: "MSSQL Database Backup for {{ database_identifier }}"
     minute: "20"
     hour: "*/4"
     day: "*"
     month: "*"
     weekday: "*"
     user: root
-    job: "{{ database_root_directory }}/{{ database_name }}/scripts/create-backup"
+    job: "{{ database_directory }}/scripts/create-backup"

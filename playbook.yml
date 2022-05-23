@@ -3,16 +3,4 @@
   hosts: all
   roles:
     - role: create-bucket
-      vars:
-        bucket_aws_access_key_id: "{{ aws_access_key_id }}"
-        bucket_aws_secret_access_key: "{{ aws_secret_access_key }}"
-        bucket_aws_region: "{{ aws_region }}"
-
     - role: create-mssql-database
-      vars:
-        database_root_directory: /home/eliseu/tmp/mssql
-        database_name: "{{ name }}"
-        database_aws_access_key_id: "{{ aws_access_key_id }}"
-        database_aws_secret_access_key: "{{ aws_secret_access_key }}"
-        database_aws_region: "{{ aws_region }}"
-        database_aws_bucket_name: "{{ bucket_name }}"

@@ -1,3 +1,4 @@
+# {{ database_identifier }}
 # string(Developer | Express | Standard | Enterprise | EnterpriseCore), example: Express
 MSSQL_PID={{ database_pid }}
 
@@ -17,13 +18,13 @@ DB_PASSWORD={{ database_password }}
 DB_DATABASE={{ database_database }}
 
 # string, example: AKIAIOSFODNN7EXAMPLE
-AWS_ACCESS_KEY_ID={{ database_aws_access_key_id }}
+AWS_ACCESS_KEY_ID={{ mssql_aws_access_key_id }}
 
 # string, example: wJalrXUtnFEMILK7MDENGEbPxRfiCYEXAMPLEKEY
-AWS_SECRET_ACCESS_KEY={{ database_aws_secret_access_key }}
+AWS_SECRET_ACCESS_KEY={{ mssql_aws_secret_access_key }}
 
 # string(s3://<bucket_name>), example: s3://mssql-backups
-AWS_S3_BUCKET=s3://{{ database_aws_bucket_name }}
+AWS_S3_BUCKET=s3://{{ mssql_project }}-{{ database_identifier }}
 
 # string(us-east-2 | sa-east-1 | ...), example: us-east-2
-AWS_REGION={{ database_aws_region }}
+AWS_REGION={{ mssql_aws_region }}
